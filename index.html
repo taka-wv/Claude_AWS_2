@@ -1,0 +1,1169 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>AWSこれだけは知っておけ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: インフラ構成図をヒーローに置き、各サービスは「図＋要点」の2カラム。カテゴリ色で全体を貫く */
+:root{
+  --bg:#F1F4F6; --surface:#FFFFFF; --soft:#E7ECF0; --ink:#17202A; --muted:#5B6674; --line:#D5DCE3;
+  --c-compute:#C8661A; --c-storage:#2B8A5A; --c-db:#2F5FC4; --c-net:#7646C4; --c-sec:#C23541; --c-ops:#9A7A00; --c-geo:#4F6874; --c-ai:#0B8794;
+  --ok:#2B8A5A; --ng:#C23541;
+  --f-display:"Dela Gothic One","Hiragino Kaku Gothic StdN","Yu Gothic",sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F141A; --surface:#171F28; --soft:#202A35; --ink:#E5EAF0; --muted:#98A3AF; --line:#2B3642;
+  --c-compute:#F0913D; --c-storage:#4CBE88; --c-db:#6E98F2; --c-net:#A985F2; --c-sec:#F06973; --c-ops:#D7B43A; --c-geo:#8EA6B2; --c-ai:#3CC5D1;
+  --ok:#4CBE88; --ng:#F06973; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0F141A; --surface:#171F28; --soft:#202A35; --ink:#E5EAF0; --muted:#98A3AF; --line:#2B3642;
+  --c-compute:#F0913D; --c-storage:#4CBE88; --c-db:#6E98F2; --c-net:#A985F2; --c-sec:#F06973; --c-ops:#D7B43A; --c-geo:#8EA6B2; --c-ai:#3CC5D1;
+  --ok:#4CBE88; --ng:#F06973; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px}
+@media (max-width:480px){.wrap{padding-inline:16px}}
+h1,h2,h3{text-wrap:balance;margin:0}
+.cat-compute{--c:var(--c-compute)} .cat-storage{--c:var(--c-storage)} .cat-db{--c:var(--c-db)} .cat-net{--c:var(--c-net)}
+.cat-sec{--c:var(--c-sec)} .cat-ops{--c:var(--c-ops)} .cat-geo{--c:var(--c-geo)} .cat-ai{--c:var(--c-ai)}
+.tint{background:color-mix(in srgb,var(--c) 11%,var(--surface))}
+
+/* nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav ul{list-style:none;margin:0 auto;max-width:1120px;padding:10px 20px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.nav ul::-webkit-scrollbar{display:none}
+.nav a{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;font-size:13px;font-weight:500;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.nav a::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.nav a:hover,.nav a:focus-visible{border-color:var(--c);outline:none}
+
+/* hero */
+.hero{padding-block:48px 24px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.hero h1{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,6.4vw,68px);line-height:1.15;margin-top:10px;letter-spacing:.01em}
+.hero h1 em{font-style:normal;color:var(--c-compute)}
+.hero p.sub{font-size:clamp(15px,2vw,18px);color:var(--muted);margin:14px 0 0;max-width:40em}
+.diagram{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 18px 12px}
+.diagram-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 20px;margin-bottom:6px}
+.diagram-head h2{font-size:17px;font-weight:700}
+.diagram-head span{font-size:12.5px;color:var(--muted)}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll-x > svg{display:block;min-width:820px;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend span::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
+
+/* svg common */
+svg text{font-family:var(--f-body)}
+.node rect,.node circle.bg{fill:var(--surface);stroke:var(--c);stroke-width:2}
+.node .nt{fill:var(--ink);font-weight:700;font-size:15px;text-anchor:middle}
+.node .ns{fill:var(--muted);font-size:11.5px;text-anchor:middle}
+a .node{cursor:pointer}
+a:hover .node rect,a:focus .node rect{fill:color-mix(in srgb,var(--c) 14%,var(--surface))}
+.box{fill:none;stroke:var(--line);stroke-width:1.5}
+.box.dash{stroke-dasharray:6 5}
+.box.fillsoft{fill:var(--soft);stroke:none}
+.box.c{stroke:var(--c);fill:color-mix(in srgb,var(--c) 6%,transparent)}
+.lbl{fill:var(--muted);font-size:12px;font-weight:700}
+.lbl.c{fill:var(--c)}
+.small{fill:var(--muted);font-size:11px}
+.ink{fill:var(--ink)}
+.wire{fill:none;stroke:var(--muted);stroke-width:1.6}
+.wire.dash{stroke-dasharray:5 4}
+.wire.c{stroke:var(--c)}
+.wire.ng{stroke:var(--ng)}
+.arrowhead{fill:var(--muted)}
+.ngt{fill:var(--ng);font-weight:700}
+.okt{fill:var(--ok);font-weight:700}
+.person{fill:var(--muted)}
+
+/* map grid */
+.sect-title{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.sect-title h2{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,3.4vw,30px)}
+.sect-title p{margin:0;color:var(--muted);font-size:14px}
+.map{padding-block:40px 8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.card{display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px 12px;align-items:center;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);text-decoration:none;transition:border-color .15s,transform .15s}
+.card:hover,.card:focus-visible{border-color:var(--c);transform:translateY(-2px);outline:none}
+.card .ib{grid-row:span 2;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent)}
+.card b{font-size:16px;line-height:1.3}
+.card small{color:var(--muted);font-size:12.5px;line-height:1.4}
+.card.kiro{border-style:dashed;border-color:var(--c)}
+.ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* service sections */
+.svc{padding-block:56px 8px;scroll-margin-top:60px}
+.svc + .svc{border-top:1px solid var(--line);margin-top:40px}
+.svc-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 18px;align-items:center;margin-bottom:24px}
+.badge{grid-row:span 3;width:68px;height:68px;border-radius:18px;display:grid;place-items:center;color:var(--surface);background:var(--c)}
+.badge .ico{width:36px;height:36px;stroke-width:1.7}
+.tag{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--c)}
+.svc-head h2{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
+.svc-head h2 .en{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,5vw,44px);line-height:1.1}
+.svc-head h2 .ja{font-size:clamp(17px,2.4vw,22px);font-weight:700;color:var(--c)}
+.svc-head p{margin:0;color:var(--muted);font-size:15px}
+@media (max-width:520px){.badge{width:52px;height:52px;border-radius:14px}.badge .ico{width:28px;height:28px}}
+.grid2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+.grid2.even{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:860px){.grid2,.grid2.even{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;min-width:0}
+.panel h3{font-size:14px;font-weight:700;color:var(--muted);margin-bottom:12px;letter-spacing:.04em}
+.stack{display:grid;gap:18px;min-width:0}
+.panel svg{display:block;width:100%;height:auto}
+
+/* chips & points */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;padding:6px 12px;border-radius:999px;background:color-mix(in srgb,var(--c) 11%,var(--surface));border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.chip.star{background:var(--c);color:var(--surface);border-color:var(--c);font-weight:700}
+.uses{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.use{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--soft);font-size:13.5px;line-height:1.4}
+.use i{font-style:normal;font-family:var(--f-mono);font-size:11px;color:var(--c);font-weight:600}
+.warn{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--ng) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--ng) 35%,transparent)}
+.warn .ico{color:var(--ng);width:24px;height:24px;margin-top:2px}
+.warn b{display:block;color:var(--ng);font-size:13.5px}
+.warn ul{margin:4px 0 0;padding-left:1.1em;font-size:14px}
+.warn li + li{margin-top:2px}
+.oneliner{margin-top:22px;padding:14px 18px;border-radius:14px;border:2px solid var(--c);display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:15px}
+.oneliner b{font-family:var(--f-display);font-weight:400;color:var(--c);font-size:13px;letter-spacing:.06em}
+
+/* EC2 states */
+.states{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.state{border-radius:14px;padding:14px 12px;text-align:center;background:var(--soft);display:grid;gap:4px;justify-items:center}
+.state b{font-size:15px}
+.state small{font-size:12px;color:var(--muted);line-height:1.45}
+.state .coin{font-family:var(--f-mono);font-weight:600;font-size:18px;letter-spacing:.06em}
+.state.on{background:color-mix(in srgb,var(--ng) 12%,var(--surface))}
+.state.on .coin{color:var(--ng)}
+.state.stop .coin{color:var(--c-ops)}
+.state.del .coin{color:var(--ok)}
+.analogy{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:13.5px;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{padding:12px 14px;border-radius:12px;border:1px solid var(--line)}
+.tile .k{font-family:var(--f-mono);font-size:12px;color:var(--c);font-weight:600}
+.tile b{display:block;font-size:15px;line-height:1.4}
+.tile span{font-size:12.5px;color:var(--muted)}
+@media (max-width:420px){.states{grid-template-columns:minmax(0,1fr)}}
+
+/* tree */
+.tree{font-family:var(--f-mono);font-size:13.5px;line-height:1.9;background:var(--soft);border-radius:12px;padding:14px 16px;overflow-x:auto;white-space:pre;margin:0}
+.tree .b{color:var(--c);font-weight:600}
+.tree .m{color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;font-size:14px;margin-top:12px}
+.kv dt{font-weight:700;color:var(--c)}
+.kv dd{margin:0}
+
+/* timeline */
+.timeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));position:relative;margin-top:6px}
+.timeline::before{content:"";position:absolute;left:8%;right:8%;top:14px;height:3px;background:linear-gradient(90deg,var(--c),var(--c-ops),var(--ng));border-radius:3px}
+.tstep{position:relative;text-align:center;display:grid;justify-items:center;gap:2px;padding-inline:4px}
+.tstep .dot{width:30px;height:30px;border-radius:50%;background:var(--surface);border:3px solid var(--c);display:grid;place-items:center;font-family:var(--f-mono);font-size:11px;font-weight:600}
+.tstep:nth-child(2) .dot{border-color:var(--c-ops)}
+.tstep:nth-child(3) .dot{border-color:var(--ng)}
+.tstep b{font-size:13.5px;margin-top:4px}
+.tstep small{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* compare meters */
+.cmp{width:100%;border-collapse:collapse;font-size:14px}
+.cmp th,.cmp td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.cmp thead th{font-size:13px;color:var(--muted);font-weight:700}
+.cmp thead th.c1{color:var(--c)}
+.cmp tbody th{font-weight:500;color:var(--muted);font-size:13px}
+.cmp tr:last-child th,.cmp tr:last-child td{border-bottom:0}
+.dots{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--c)}
+.dots.g i.on{background:var(--muted)}
+.cmp small{color:var(--muted);font-size:12px;display:block;line-height:1.3}
+.code{font-family:var(--f-mono);font-size:12.5px;background:var(--soft);border-radius:10px;padding:10px 12px;overflow-x:auto;white-space:pre;margin:10px 0 0}
+
+/* IAM */
+.formula{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:center}
+.fpart{text-align:center;padding:12px 16px;border-radius:14px;background:color-mix(in srgb,var(--c) 11%,var(--surface));min-width:110px}
+.fpart b{display:block;font-size:20px;color:var(--c);font-family:var(--f-display);font-weight:400}
+.fpart small{font-size:12px;color:var(--muted)}
+.fop{font-family:var(--f-display);font-size:20px;color:var(--muted)}
+.matrix-wrap{overflow-x:auto}
+.matrix{width:100%;border-collapse:collapse;font-size:13.5px;min-width:420px}
+.matrix th,.matrix td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line)}
+.matrix thead th{font-size:12.5px;color:var(--muted);font-weight:700}
+.matrix tbody th{text-align:left;font-weight:700;white-space:nowrap}
+.matrix tbody th small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+.y{color:var(--ok);font-weight:700}
+.n{color:var(--ng);opacity:.75}
+.r{color:var(--c-ops);font-weight:700;font-size:12px}
+.elements{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+
+/* Lambda */
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+.fstep{flex:1 1 110px;min-width:0;padding:12px;border-radius:12px;background:var(--soft);text-align:center;display:grid;gap:2px;align-content:center}
+.fstep b{font-size:14px;line-height:1.35}
+.fstep small{font-size:11.5px;color:var(--muted);font-family:var(--f-mono)}
+.fstep.hl{background:var(--c);color:var(--surface)}
+.fstep.hl small{color:inherit;opacity:.85}
+.farrow{display:grid;place-items:center;color:var(--muted);font-size:18px}
+@media (max-width:640px){.flow{flex-direction:column}.farrow{transform:rotate(90deg);height:18px}}
+.bill{display:grid;gap:12px}
+.billrow{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:center;font-size:13px}
+.billrow b{font-size:13.5px}
+.bar{position:relative;height:26px;border-radius:7px;background:var(--soft);overflow:hidden}
+.bar .full{position:absolute;inset:0;background:color-mix(in srgb,var(--c-compute) 70%,transparent)}
+.bar .spike{position:absolute;top:0;bottom:0;width:1.6%;background:var(--c)}
+.bar span.t{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:700;color:var(--ink)}
+.axis{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-left:82px}
+.vs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.vs > div{padding:14px;border-radius:12px;background:var(--soft);text-align:center}
+.vs b{display:block;font-size:16px}
+.vs small{color:var(--muted);font-size:12.5px}
+
+/* CloudFront routes */
+.route{display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr) auto;align-items:center;gap:8px;padding:14px 0}
+.route + .route{border-top:1px dashed var(--line)}
+.route .tag2{grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--muted);display:flex;gap:8px;align-items:center}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:1px 9px;border-radius:999px}
+.pill.slow{background:color-mix(in srgb,var(--ng) 15%,transparent);color:var(--ng)}
+.pill.fast{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pt{padding:8px 10px;border-radius:10px;background:var(--soft);font-size:12.5px;text-align:center;line-height:1.35;min-width:0}
+.pt b{display:block;font-size:13px}
+.pt.edge{background:var(--c);color:var(--surface)}
+.pt.ghost{visibility:hidden}
+.ln{height:0;border-top:2.5px solid var(--muted);position:relative}
+.ln.long{border-top-style:dashed;border-color:var(--ng)}
+.ln.short{border-color:var(--ok)}
+.ln.faint{border-top-style:dotted;border-color:var(--line)}
+.ln span{position:absolute;left:50%;transform:translate(-50%,-130%);font-size:11px;color:var(--muted);white-space:nowrap}
+@media (max-width:480px){.ln span{display:none}}
+
+/* Route53 */
+.dns{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;text-align:center}
+.dns .q{padding:14px 10px;border-radius:12px;background:var(--soft);min-width:0}
+.dns .q code{font-family:var(--f-mono);font-size:14px;font-weight:600;word-break:break-all}
+.dns .q small{display:block;font-size:11.5px;color:var(--muted)}
+.dns .mid{background:var(--c);color:var(--surface)}
+.dns .mid small{color:inherit;opacity:.85}
+.dns .arr{color:var(--muted);font-size:18px}
+@media (max-width:560px){.dns{grid-template-columns:minmax(0,1fr)}.dns .arr{transform:rotate(90deg)}}
+.recs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rec{padding:12px;border-radius:12px;border:1px solid var(--line)}
+.rec b{font-family:var(--f-mono);font-size:17px;color:var(--c)}
+.rec span{display:block;font-size:13.5px;line-height:1.45}
+.rec code{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+
+/* suitability */
+.fit{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.fit li{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:10px;font-size:14px;padding:8px 10px;border-radius:10px;background:var(--soft)}
+.fit .m{font-size:18px;text-align:center;font-weight:700;color:var(--ok)}
+.fit .m.tri{color:var(--c-ops)}
+.fit small{color:var(--muted);font-size:12px}
+
+/* region list */
+.regions{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.regions li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 12px;border-radius:10px;background:var(--soft);font-size:14px}
+.regions code{font-family:var(--f-mono);font-size:12px;color:var(--c)}
+.regions li.note{background:color-mix(in srgb,var(--c-ops) 13%,var(--surface))}
+.regions li small{grid-column:1/-1;font-size:12px;color:var(--muted);line-height:1.4}
+
+/* Kiro */
+.kiro-sec{padding-block:64px 16px;scroll-margin-top:60px}
+.kiro-hero{border-radius:22px;padding:28px;background:color-mix(in srgb,var(--c) 10%,var(--surface));border:1.5px solid color-mix(in srgb,var(--c) 45%,transparent)}
+.kiro-hero .new{display:inline-block;font-family:var(--f-mono);font-size:11px;font-weight:600;letter-spacing:.12em;padding:3px 10px;border-radius:999px;background:var(--c);color:var(--surface)}
+.kiro-hero h2{margin-top:12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
+.kiro-hero h2 .en{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,5.6vw,52px);line-height:1.1}
+.kiro-hero h2 .ja{font-size:clamp(17px,2.4vw,22px);font-weight:700;color:var(--c)}
+.kiro-hero p{margin:8px 0 0;max-width:46em;color:var(--muted)}
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}
+.mode{padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.mode b{font-size:17px}
+.mode .k{font-family:var(--f-mono);font-size:11.5px;color:var(--c);font-weight:600;display:block}
+.mode p{margin:4px 0 0;font-size:13.5px;color:var(--muted)}
+@media (max-width:560px){.modes{grid-template-columns:minmax(0,1fr)}}
+.spec{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;counter-reset:s}
+.sstep{position:relative;padding:14px 12px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:grid;gap:4px;align-content:start;min-width:0}
+.sstep .no{font-family:var(--f-display);font-size:22px;color:var(--c);line-height:1}
+.sstep code{font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--c);word-break:break-all}
+.sstep b{font-size:14.5px;line-height:1.35}
+.sstep small{font-size:12px;color:var(--muted);line-height:1.45}
+.sstep.out{background:var(--c);color:var(--surface);border-color:var(--c)}
+.sstep.out .no,.sstep.out code,.sstep.out small{color:inherit}
+@media (max-width:900px){.spec{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}}
+.feat{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.f{padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.f .k{font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--c)}
+.f b{display:block;font-size:16px;margin-top:2px}
+.f p{margin:6px 0 0;font-size:13.5px;color:var(--muted);line-height:1.6}
+.f .ex{margin-top:8px;font-size:12.5px;padding:8px 10px;border-radius:8px;background:var(--soft);line-height:1.5}
+.doc{font-family:var(--f-mono);font-size:12.5px;line-height:1.75;background:var(--soft);border-radius:12px;padding:14px 16px;overflow-x:auto;white-space:pre;margin:0}
+.doc .h{color:var(--c);font-weight:600}
+.doc .hl{background:color-mix(in srgb,var(--c-ops) 30%,transparent);border-radius:3px;padding:0 2px}
+.price{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums;min-width:360px}
+.price th,.price td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:right}
+.price th:first-child,.price td:first-child{text-align:left}
+.price thead th{font-size:12.5px;color:var(--muted);font-weight:700}
+.price td.plan{font-weight:700}
+.price .barc{width:38%;text-align:left}
+.cbar{height:10px;border-radius:5px;background:var(--c);min-width:3px}
+.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+
+/* summary */
+.summary{padding-block:56px 64px}
+.sum-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.sum{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+.sum th,.sum td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left}
+.sum thead th{font-size:12.5px;color:var(--muted);background:var(--soft)}
+.sum tbody tr:last-child td{border-bottom:0}
+.sum td:first-child{font-weight:700;white-space:nowrap}
+.sum td:first-child::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:8px}
+.sum a{text-decoration:none}
+.sum a:hover{text-decoration:underline}
+footer{padding-block:0 48px;color:var(--muted);font-size:12.5px}
+footer a{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+
+<!-- icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-ec2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M7 8h4M7 11h7"/></symbol>
+    <symbol id="i-s3" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6l2 12.5c.3 1.5 2.8 2.5 6 2.5s5.7-1 6-2.5L20 6"/></symbol>
+    <symbol id="i-rds" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="7.5" ry="2.8"/><path d="M4.5 5v14c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8V5"/><path d="M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></symbol>
+    <symbol id="i-iam" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16.5 6.5l3 3M14 9l2.2 2.2"/></symbol>
+    <symbol id="i-cw" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M6 14h3l2-5 3 8 2-4h2"/></symbol>
+    <symbol id="i-lambda" viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12z"/></symbol>
+    <symbol id="i-cf" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.5 3.6 5.5 3.6 9s-1.2 6.5-3.6 9c-2.4-2.5-3.6-5.5-3.6-9S9.6 5.5 12 3z"/></symbol>
+    <symbol id="i-r53" viewBox="0 0 24 24"><path d="M12 2v20M5 5h11l3 2.5-3 2.5H5zM19 13H8l-3 2.5L8 18h11z"/></symbol>
+    <symbol id="i-ls" viewBox="0 0 24 24"><path d="M12 3v14M12 4l7 12h-7M11 7l-5.5 9H11"/><path d="M3 19c3 2 15 2 18 0"/></symbol>
+    <symbol id="i-vpc" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></symbol>
+    <symbol id="i-elb" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M12 6.5v4.5M12 11l-6 5.5M12 11v5.5M12 11l6 5.5"/><circle cx="6" cy="18.5" r="2"/><circle cx="12" cy="18.5" r="2"/><circle cx="18" cy="18.5" r="2"/></symbol>
+    <symbol id="i-region" viewBox="0 0 24 24"><path d="M12 21.5s-7-6.3-7-12a7 7 0 0114 0c0 5.7-7 12-7 12z"/><circle cx="12" cy="9.5" r="2.6"/></symbol>
+    <symbol id="i-kiro" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M12 10.5l1.1 2.6 2.6 1.1-2.6 1.1L12 18l-1.1-2.7-2.6-1.1 2.6-1.1z"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.5l9.5 17h-19z"/><path d="M12 10v5M12 18v.01"/></symbol>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+</svg>
+
+<nav class="nav" aria-label="目次">
+  <ul>
+    <li class="cat-compute"><a href="#ec2">EC2</a></li>
+    <li class="cat-storage"><a href="#s3">S3</a></li>
+    <li class="cat-db"><a href="#rds">RDS</a></li>
+    <li class="cat-sec"><a href="#iam">IAM</a></li>
+    <li class="cat-ops"><a href="#cloudwatch">CloudWatch</a></li>
+    <li class="cat-compute"><a href="#lambda">Lambda</a></li>
+    <li class="cat-net"><a href="#cloudfront">CloudFront</a></li>
+    <li class="cat-net"><a href="#route53">Route 53</a></li>
+    <li class="cat-compute"><a href="#lightsail">Lightsail</a></li>
+    <li class="cat-net"><a href="#vpc">VPC</a></li>
+    <li class="cat-net"><a href="#elb">ELB</a></li>
+    <li class="cat-geo"><a href="#region">リージョン/AZ</a></li>
+    <li class="cat-ai"><a href="#kiro">Kiro</a></li>
+    <li class="cat-geo"><a href="#summary">早見表</a></li>
+  </ul>
+</nav>
+
+<main>
+<header class="hero wrap">
+  <div class="eyebrow">AWS入門 ・ 基本12キーワード ＋ Kiro</div>
+  <h1>AWS<em>これだけは</em><br>知っておけ</h1>
+  <p class="sub">サーバー、倉庫、データベース、権限、監視。AWSの基本を「たとえ」と「図」でつかむための資料です。まずは下の1枚で全体像を見てください。</p>
+
+  <figure class="diagram" style="margin-inline:0">
+    <div class="diagram-head">
+      <h2>よくあるWebシステムの全体図</h2>
+      <span>図中のサービスを押すと、その解説へ移動します</span>
+    </div>
+    <div class="scroll-x">
+    <svg viewBox="0 0 960 440" role="img" aria-label="ユーザーからRoute 53、CloudFront、ELB、EC2、RDS、S3、Lambdaへつながる典型的な構成図">
+      <!-- user -->
+      <g>
+        <circle class="person" cx="48" cy="196" r="10"/>
+        <path class="person" d="M30 228c0-11 8-18 18-18s18 7 18 18z"/>
+        <text class="small" x="48" y="250" text-anchor="middle">ユーザー</text>
+      </g>
+      <!-- region -->
+      <rect class="box dash" x="410" y="14" width="536" height="412" rx="16"/>
+      <text class="lbl" x="426" y="36">東京リージョン（ap-northeast-1）</text>
+      <!-- IAM / CloudWatch bands -->
+      <a href="#iam"><g class="node cat-sec"><rect x="426" y="46" width="250" height="34" rx="17"/><text class="nt" x="551" y="68" style="font-size:13px">IAM <tspan class="ns" style="font-size:11.5px;font-weight:400">誰が何をできるか</tspan></text></g></a>
+      <a href="#cloudwatch"><g class="node cat-ops"><rect x="686" y="46" width="244" height="34" rx="17"/><text class="nt" x="808" y="68" style="font-size:13px">CloudWatch <tspan class="ns" style="font-size:11.5px;font-weight:400">全体を見張る</tspan></text></g></a>
+      <!-- VPC -->
+      <g class="cat-net"><rect class="box c" x="426" y="104" width="334" height="306" rx="12"/></g>
+      <a href="#vpc"><text class="lbl cat-net" x="440" y="124" style="fill:var(--c-net)">VPC（自分の土地）</text></a>
+      <!-- AZ boxes -->
+      <rect class="box dash" x="552" y="134" width="196" height="128" rx="10"/>
+      <text class="small" x="562" y="152">AZ-a</text>
+      <rect class="box dash" x="552" y="274" width="196" height="128" rx="10"/>
+      <text class="small" x="562" y="292">AZ-c</text>
+      <!-- wires -->
+      <path class="wire" d="M72 212H106" marker-end="url(#ah)"/>
+      <path class="wire" d="M230 212H258" marker-end="url(#ah)"/>
+      <path class="wire" d="M382 222C408 222 412 254 436 254" marker-end="url(#ah)"/>
+      <path class="wire" d="M322 180V92H858V130" marker-end="url(#ah)"/>
+      <text class="small" x="866" y="120">画像など</text>
+      <path class="wire" d="M532 246C548 246 546 194 560 194" marker-end="url(#ah)"/>
+      <path class="wire" d="M532 262C548 262 546 334 560 334" marker-end="url(#ah)"/>
+      <path class="wire" d="M646 194H652" marker-end="url(#ah)"/>
+      <path class="wire" d="M646 334H652" marker-end="url(#ah)"/>
+      <path class="wire dash" d="M697 224V302"/>
+      <text class="small" x="703" y="268">同期</text>
+      <path class="wire dash" d="M858 200V286" marker-end="url(#ah)"/>
+      <text class="small" x="850" y="238" text-anchor="end">アップロード</text>
+      <text class="small" x="850" y="254" text-anchor="end">をきっかけに</text>
+      <!-- nodes -->
+      <a href="#route53"><g class="node cat-net"><rect x="108" y="180" width="122" height="64" rx="10"/><text class="nt" x="169" y="207">Route 53</text><text class="ns" x="169" y="228">住所案内</text></g></a>
+      <a href="#cloudfront"><g class="node cat-net"><rect x="260" y="180" width="122" height="64" rx="10"/><text class="nt" x="321" y="207">CloudFront</text><text class="ns" x="321" y="228">配送センター</text></g></a>
+      <a href="#elb"><g class="node cat-net"><rect x="438" y="226" width="94" height="56" rx="10"/><text class="nt" x="485" y="250">ELB</text><text class="ns" x="485" y="269">交通整理</text></g></a>
+      <a href="#ec2"><g class="node cat-compute"><rect x="562" y="166" width="84" height="56" rx="10"/><text class="nt" x="604" y="190">EC2</text><text class="ns" x="604" y="209">Webアプリ</text></g></a>
+      <a href="#rds"><g class="node cat-db"><rect x="654" y="166" width="84" height="56" rx="10"/><text class="nt" x="696" y="190">RDS</text><text class="ns" x="696" y="209">本番DB</text></g></a>
+      <a href="#ec2"><g class="node cat-compute"><rect x="562" y="306" width="84" height="56" rx="10"/><text class="nt" x="604" y="330">EC2</text><text class="ns" x="604" y="349">Webアプリ</text></g></a>
+      <a href="#rds"><g class="node cat-db"><rect x="654" y="306" width="84" height="56" rx="10"/><text class="nt" x="696" y="330">RDS</text><text class="ns" x="696" y="349">予備DB</text></g></a>
+      <a href="#s3"><g class="node cat-storage"><rect x="786" y="132" width="144" height="64" rx="10"/><text class="nt" x="858" y="159">S3</text><text class="ns" x="858" y="180">ファイル倉庫</text></g></a>
+      <a href="#lambda"><g class="node cat-compute"><rect x="786" y="288" width="144" height="64" rx="10"/><text class="nt" x="858" y="315">Lambda</text><text class="ns" x="858" y="336">自動処理</text></g></a>
+      <text class="small" x="426" y="436" style="font-size:10.5px">※ AZを2つに分けて、片方が止まっても動き続ける構成（マルチAZ）</text>
+    </svg>
+    </div>
+    <div class="legend">
+      <span class="cat-compute">動かす（コンピューティング）</span>
+      <span class="cat-storage">置く（ストレージ）</span>
+      <span class="cat-db">記録する（データベース）</span>
+      <span class="cat-net">つなぐ・届ける（ネットワーク）</span>
+      <span class="cat-sec">守る（セキュリティ）</span>
+      <span class="cat-ops">見張る（運用監視）</span>
+      <span class="cat-geo">土台（設備の場所）</span>
+      <span class="cat-ai">AIで作る（開発ツール）</span>
+    </div>
+  </figure>
+</header>
+
+<section class="map wrap" aria-labelledby="map-t">
+  <div class="sect-title"><h2 id="map-t">ひとことで言うと</h2><p>13のキーワードを「身近なもの」にたとえると</p></div>
+  <div class="cards">
+    <a class="card cat-compute" href="#ec2"><span class="ib"><svg class="ico"><use href="#i-ec2"/></svg></span><b>EC2</b><small>借りられるパソコン</small></a>
+    <a class="card cat-storage" href="#s3"><span class="ib"><svg class="ico"><use href="#i-s3"/></svg></span><b>S3</b><small>なんでも置ける倉庫</small></a>
+    <a class="card cat-db" href="#rds"><span class="ib"><svg class="ico"><use href="#i-rds"/></svg></span><b>RDS</b><small>おまかせDB屋さん</small></a>
+    <a class="card cat-sec" href="#iam"><span class="ib"><svg class="ico"><use href="#i-iam"/></svg></span><b>IAM</b><small>入退室管理・通行証</small></a>
+    <a class="card cat-ops" href="#cloudwatch"><span class="ib"><svg class="ico"><use href="#i-cw"/></svg></span><b>CloudWatch</b><small>監視カメラ＆健康診断</small></a>
+    <a class="card cat-compute" href="#lambda"><span class="ib"><svg class="ico"><use href="#i-lambda"/></svg></span><b>Lambda</b><small>呼ばれた時だけ働くアルバイト</small></a>
+    <a class="card cat-net" href="#cloudfront"><span class="ib"><svg class="ico"><use href="#i-cf"/></svg></span><b>CloudFront</b><small>世界中にある配送センター</small></a>
+    <a class="card cat-net" href="#route53"><span class="ib"><svg class="ico"><use href="#i-r53"/></svg></span><b>Route 53</b><small>名前から住所を教える案内所</small></a>
+    <a class="card cat-compute" href="#lightsail"><span class="ib"><svg class="ico"><use href="#i-ls"/></svg></span><b>Lightsail</b><small>AWSの初心者セット</small></a>
+    <a class="card cat-net" href="#vpc"><span class="ib"><svg class="ico"><use href="#i-vpc"/></svg></span><b>VPC</b><small>自分専用の土地</small></a>
+    <a class="card cat-net" href="#elb"><span class="ib"><svg class="ico"><use href="#i-elb"/></svg></span><b>ELB</b><small>アクセスの交通整理員</small></a>
+    <a class="card cat-geo" href="#region"><span class="ib"><svg class="ico"><use href="#i-region"/></svg></span><b>リージョン / AZ</b><small>営業所エリアと独立した建物</small></a>
+    <a class="card cat-ai kiro" href="#kiro"><span class="ib"><svg class="ico"><use href="#i-kiro"/></svg></span><b>Kiro</b><small>仕様書から作るAI開発パートナー</small></a>
+  </div>
+</section>
+
+<div class="wrap">
+
+<!-- EC2 -->
+<section id="ec2" class="svc cat-compute">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-ec2"/></svg></div>
+    <div class="tag">01 ・ 動かす</div>
+    <h2><span class="en">EC2</span><span class="ja">借りられるパソコン</span></h2>
+    <p>AWSのデータセンターにある仮想サーバー。24時間365日、ネット越しに誰でもアクセスできます。借りた1台を「インスタンス」と呼びます。</p>
+  </header>
+  <div class="grid2">
+    <div class="stack">
+      <div class="panel">
+        <h3>お金がかかるのは「起動中」</h3>
+        <div class="states">
+          <div class="state on"><span class="coin">¥¥¥</span><b>起動中</b><small>何もしていなくても<br>ずっと課金</small></div>
+          <div class="state stop"><span class="coin">¥</span><b>停止</b><small>実行料金は0<br>ディスク(EBS)代は残る</small></div>
+          <div class="state del"><span class="coin">0</span><b>削除</b><small>料金なし<br>データも消える</small></div>
+        </div>
+        <div class="analogy">コインパーキングに車を止めっぱなしと同じ。使い終わったら止める、不要なら消す。</div>
+      </div>
+      <div class="panel">
+        <h3>借りるときに選ぶ4つ（部屋にたとえると）</h3>
+        <div class="tiles">
+          <div class="tile"><span class="k">AMI</span><b>OS・出発点</b><span>部屋の初期レイアウト</span></div>
+          <div class="tile"><span class="k">インスタンスタイプ</span><b>性能</b><span>部屋の広さ</span></div>
+          <div class="tile"><span class="k">EBS</span><b>保存ディスク</b><span>荷物を置く棚</span></div>
+          <div class="tile"><span class="k">セキュリティグループ</span><b>通信の許可</b><span>入口のルール</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>何に使う？</h3>
+        <div class="uses">
+          <div class="use"><i>WEB</i>Webサイト・WordPress</div>
+          <div class="use"><i>API</i>APIサーバー</div>
+          <div class="use"><i>BATCH</i>データの定期処理</div>
+          <div class="use"><i>APP</i>社内の業務アプリ</div>
+          <div class="use"><i>ML</i>分析・機械学習</div>
+          <div class="use"><i>GAME</i>ゲームサーバー</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>自分のPCとの違い</h3>
+        <table class="cmp">
+          <thead><tr><th></th><th>自分のPC</th><th class="c1">EC2</th></tr></thead>
+          <tbody>
+            <tr><th>使える人</th><td>自分だけ</td><td><b>世界中の誰でも</b></td></tr>
+            <tr><th>電源</th><td>使う時だけ</td><td><b>24時間ON</b></td></tr>
+            <tr><th>料金</th><td>買い切り</td><td><b>使った分だけ</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="oneliner"><b>まとめ</b>「サーバーが必要？ じゃあEC2」くらいの理解でOK。</div>
+</section>
+
+<!-- S3 -->
+<section id="s3" class="svc cat-storage">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-s3"/></svg></div>
+    <div class="tag">02 ・ 置く</div>
+    <h2><span class="en">S3</span><span class="ja">なんでも置ける倉庫</span></h2>
+    <p>画像・動画・PDF・CSV・ログ…どんなファイルも保存できるネット上のフォルダ。EC2が「動く場所」なら、S3は「置く場所」です。</p>
+  </header>
+  <div class="grid2">
+    <div class="stack">
+      <div class="panel">
+        <h3>中身の構造</h3>
+<pre class="tree"><span class="b">my-awesome-bucket</span>   <span class="m">← バケット（大きな入れ物）</span>
+├── images/
+│   └── neko.jpg        <span class="m">← オブジェクト（ファイル）</span>
+└── pdf/
+    └── catalog.pdf</pre>
+        <p class="note">フォルダに見えるのは、ファイル名に「/」を入れて階層っぽく見せているだけです。</p>
+      </div>
+      <div class="panel">
+        <h3>ライフサイクルで自動整理</h3>
+        <div class="timeline">
+          <div class="tstep"><span class="dot">0日</span><b>保存</b><small>よく使う<br>標準ストレージ</small></div>
+          <div class="tstep"><span class="dot">30</span><b>安い棚へ移動</b><small>あまり使わない<br>データ用に自動移動</small></div>
+          <div class="tstep"><span class="dot">90</span><b>自動で削除</b><small>古いログなどを<br>自動で片付け</small></div>
+        </div>
+        <p class="note">さらに「バージョニング」を有効にすると、上書きしても過去のファイルを残せます。</p>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>ここがすごい</h3>
+        <div class="chips">
+          <span class="chip">消えない（高耐久）</span>
+          <span class="chip">どこからでもアクセス</span>
+          <span class="chip">安い（最初は月数円〜）</span>
+          <span class="chip">URLで共有</span>
+          <span class="chip">ドラッグ＆ドロップで操作</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>使い道</h3>
+        <div class="uses">
+          <div class="use"><i>WEB</i>画像・CSS・JSの置き場</div>
+          <div class="use"><i>SITE</i>静的サイトの公開</div>
+          <div class="use"><i>BKUP</i>バックアップ・ログ</div>
+          <div class="use"><i>DATA</i>アプリ・IoTのデータ</div>
+        </div>
+      </div>
+      <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>公開設定のミスに注意</b>
+        <ul><li>設定ミスでファイルが全世界に丸見えになる事故は実際に起きています</li><li>公開するものだけ明確に公開し、それ以外はIAMで制限</li></ul></div></div>
+    </div>
+  </div>
+  <div class="oneliner"><b>まとめ</b>何かを置いてあるところは、だいたいS3。</div>
+</section>
+
+<!-- RDS -->
+<section id="rds" class="svc cat-db">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-rds"/></svg></div>
+    <div class="tag">03 ・ 記録する</div>
+    <h2><span class="en">RDS</span><span class="ja">おまかせDB屋さん</span></h2>
+    <p>インストール、バックアップ、障害対応、パッチ適用など、データベースの面倒な管理をAWSが代わりにやってくれるサービスです。</p>
+  </header>
+  <div class="grid2">
+    <div class="stack">
+      <div class="panel">
+        <h3>RDS か、EC2に自分でDBを入れるか</h3>
+        <table class="cmp">
+          <thead><tr><th></th><th class="c1">RDS</th><th>EC2＋自前DB</th></tr></thead>
+          <tbody>
+            <tr><th>構築・運用の手間</th>
+              <td><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span><small>ほぼおまかせ</small></td>
+              <td><span class="dots g"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><small>全部自分で</small></td></tr>
+            <tr><th>OSまで触れる自由度</th>
+              <td><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><small>一部制限あり</small></td>
+              <td><span class="dots g"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><small>自由自在</small></td></tr>
+            <tr><th>費用</th>
+              <td><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><small>やや高め</small></td>
+              <td><span class="dots g"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><small>抑えられる</small></td></tr>
+            <tr><th>バックアップ</th><td><b>自動</b></td><td>スクリプトやcronで設定</td></tr>
+            <tr><th>向いている人</th><td><b>初心者〜中級者</b></td><td>中級者以上</td></tr>
+          </tbody>
+        </table>
+        <p class="note">ラクしたいならRDS、全部自分で触りたいならEC2にDBをインストール。</p>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>選べるデータベース</h3>
+        <div class="chips">
+          <span class="chip">MySQL</span><span class="chip">PostgreSQL</span><span class="chip">MariaDB</span><span class="chip">Oracle</span><span class="chip">SQL Server</span><span class="chip star">Aurora（AWS独自・人気）</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>つなぎ方</h3>
+        <p style="margin:0;font-size:14px">作成すると「エンドポイント」というURLがもらえます。それをアプリに設定するだけ。</p>
+<pre class="code">mysql -h your-db-endpoint.rds.amazonaws.com -u user -p</pre>
+      </div>
+      <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>よくある注意ポイント</b>
+        <ul><li>起動しっぱなしで課金され続ける</li><li>テスト中に「パブリックアクセスON」のまま</li><li>サイズ選び：小さすぎると遅い、大きすぎるとお金が溶ける</li></ul></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- IAM -->
+<section id="iam" class="svc cat-sec">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-iam"/></svg></div>
+    <div class="tag">04 ・ 守る</div>
+    <h2><span class="en">IAM</span><span class="ja">入退室管理・通行証</span></h2>
+    <p>Identity and Access Management。日本では「アイアム」と呼ばれます。AWSの鍵と通行証をまとめて管理する仕組みです。</p>
+  </header>
+  <div class="panel" style="margin-bottom:18px">
+    <div class="formula">
+      <div class="fpart"><b>誰が</b><small>ユーザー・サービス</small></div>
+      <span class="fop">×</span>
+      <div class="fpart"><b>どこに</b><small>EC2・S3・RDS…</small></div>
+      <span class="fop">×</span>
+      <div class="fpart"><b>どこまで</b><small>読むだけ／編集OK／削除NG</small></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>必要な分だけ渡す（最小権限の例）</h3>
+      <div class="matrix-wrap">
+      <table class="matrix">
+        <thead><tr><th></th><th>EC2</th><th>S3</th><th>DynamoDB</th><th>請求情報</th></tr></thead>
+        <tbody>
+          <tr><th>エンジニア</th><td class="y">○</td><td class="y">○</td><td class="y">○</td><td class="n">×</td></tr>
+          <tr><th>インターン</th><td class="n">×</td><td><span class="r">特定フォルダ<br>読むだけ</span></td><td class="n">×</td><td class="n">×</td></tr>
+          <tr><th>バッチ用Lambda<small>ロールで付与</small></th><td class="n">×</td><td><span class="r">書き込み</span></td><td><span class="r">書き込み</span></td><td class="n">×</td></tr>
+          <tr><th>管理者<small>※超慎重に</small></th><td class="y">○</td><td class="y">○</td><td class="y">○</td><td class="y">○</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>4つの部品</h3>
+        <div class="elements">
+          <div class="tile"><span class="k">USER</span><b>IAMユーザー</b><span>AWSを使う人のID</span></div>
+          <div class="tile"><span class="k">GROUP</span><b>IAMグループ</b><span>ユーザーをまとめる箱</span></div>
+          <div class="tile"><span class="k">POLICY</span><b>IAMポリシー</b><span>できることを書いたルール（JSON）</span></div>
+          <div class="tile"><span class="k">ROLE</span><b>IAMロール</b><span>EC2やLambdaに渡す仮の身分証</span></div>
+        </div>
+      </div>
+      <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>初心者がやりがちなNG</b>
+        <ul><li>全員に AdministratorAccess を付ける</li><li>よく分からず <code>s3:*</code>（全権限）と書く</li><li>アクセスキーの流出に気づかない</li></ul></div></div>
+    </div>
+  </div>
+  <div class="oneliner"><b>まとめ</b>AWSは高性能で破壊力もある道具。最初にIAMを整えるのが大人のたしなみ。</div>
+</section>
+
+<!-- CloudWatch -->
+<section id="cloudwatch" class="svc cat-ops">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-cw"/></svg></div>
+    <div class="tag">05 ・ 見張る</div>
+    <h2><span class="en">CloudWatch</span><span class="ja">監視カメラ＆健康診断</span></h2>
+    <p>「サーバー落ちてない？」「CPU使いすぎてない？」をずっと見守り、異常があれば知らせてくれる見張り番です。</p>
+  </header>
+  <div class="grid2">
+    <div class="panel">
+      <h3>例：CPU使用率が80%を超えたらSlackに通知</h3>
+      <svg viewBox="0 0 520 230" role="img" aria-label="CPU使用率の折れ線グラフ。80%のしきい値を超えた時点でアラームが鳴る">
+        <g>
+          <line x1="50" y1="20" x2="500" y2="20" stroke-width="1" style="stroke:var(--line)"/>
+          <line x1="50" y1="100" x2="500" y2="100" stroke-width="1" style="stroke:var(--line)"/>
+          <line x1="50" y1="180" x2="500" y2="180" stroke-width="1" style="stroke:var(--muted)"/>
+          <text class="small" x="42" y="24" text-anchor="end">100</text>
+          <text class="small" x="42" y="104" text-anchor="end">50</text>
+          <text class="small" x="42" y="184" text-anchor="end">0</text>
+          <text class="small" x="42" y="56" text-anchor="end" style="fill:var(--ng);font-weight:700">80</text>
+          <line x1="50" y1="52" x2="500" y2="52" stroke-width="1.5" stroke-dasharray="6 4" style="stroke:var(--ng)"/>
+          <text class="small" x="54" y="46" style="fill:var(--ng)">しきい値 80%</text>
+        </g>
+        <path d="M50 180L50 128.8L90 124L130 132L170 114.4L210 119.2L250 108L290 96.8L330 84L370 64.8L410 42.4L450 34.4L490 77.6L490 180Z" fill-opacity=".16" style="fill:var(--c)"/>
+        <polyline points="50,128.8 90,124 130,132 170,114.4 210,119.2 250,108 290,96.8 330,84 370,64.8 410,42.4 450,34.4 490,77.6" fill="none" stroke-width="2.5" stroke-linejoin="round" style="stroke:var(--c)"/>
+        <circle cx="410" cy="42.4" r="6" style="fill:var(--ng)"/>
+        <circle cx="410" cy="42.4" r="11" fill="none" stroke-width="1.5" style="stroke:var(--ng)"/>
+        <path d="M410 31V12H330" fill="none" stroke-width="1.2" style="stroke:var(--ng)"/>
+        <rect x="236" y="0" width="94" height="22" rx="11" style="fill:var(--ng)"/>
+        <text x="283" y="15" text-anchor="middle" style="fill:var(--surface);font-size:11.5px;font-weight:700">アラーム → 通知</text>
+        <text class="small" x="50" y="200" text-anchor="middle">9:00</text>
+        <text class="small" x="270" y="200" text-anchor="middle">12:00</text>
+        <text class="small" x="490" y="200" text-anchor="middle">15:00</text>
+        <text class="small" x="50" y="222">CPU使用率（%）　EC2インスタンス</text>
+      </svg>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>主な機能</h3>
+        <div class="elements">
+          <div class="tile"><span class="k">METRICS</span><b>メトリクス</b><span>CPU・接続数などを数値で見る</span></div>
+          <div class="tile"><span class="k">ALARM</span><b>アラーム</b><span>条件を超えたら通知</span></div>
+          <div class="tile"><span class="k">LOGS</span><b>ログ</b><span>エラー記録を集めて検索</span></div>
+          <div class="tile"><span class="k">DASHBOARD</span><b>ダッシュボード</b><span>グラフで見える化・共有</span></div>
+        </div>
+        <p class="note">EventBridge（旧CloudWatch Events）と組み合わせると「毎月1日にバッチ起動」などの自動実行もできます。</p>
+      </div>
+      <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>あるある</b>
+        <ul><li>アラーム未設定で、いつの間にかサーバーが落ちている</li><li>ログが無限に貯まって料金が増える → 保存期間を設定</li></ul></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Lambda -->
+<section id="lambda" class="svc cat-compute">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-lambda"/></svg></div>
+    <div class="tag">06 ・ 動かす（サーバーレス）</div>
+    <h2><span class="en">Lambda</span><span class="ja">呼ばれた時だけ働くアルバイト</span></h2>
+    <p>サーバーを用意せず、コードだけ置いておけば「何かが起きた時」に自動で実行されます。サーバーは裏にありますが、管理はAWSにおまかせ。</p>
+  </header>
+  <div class="panel" style="margin-bottom:18px">
+    <h3>例：CSVをアップロードしたら自動でデータベースに登録</h3>
+    <div class="flow">
+      <div class="fstep"><small>S3</small><b>CSVを保存</b></div><div class="farrow">→</div>
+      <div class="fstep hl"><small>Lambda</small><b>自動で起動</b></div><div class="farrow">→</div>
+      <div class="fstep"><small>Lambda</small><b>CSVを加工</b></div><div class="farrow">→</div>
+      <div class="fstep"><small>RDS</small><b>データ登録</b></div><div class="farrow">→</div>
+      <div class="fstep"><small>CloudWatch</small><b>ログを記録</b></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="stack">
+      <div class="panel">
+        <h3>料金のかかり方（1日のイメージ）</h3>
+        <div class="bill">
+          <div class="billrow"><b>EC2</b><div class="bar"><div class="full"></div><span class="t">ずっと課金</span></div></div>
+          <div class="billrow"><b>Lambda</b><div class="bar">
+            <div class="spike" style="left:6%"></div><div class="spike" style="left:8.5%"></div><div class="spike" style="left:31%"></div><div class="spike" style="left:52%"></div><div class="spike" style="left:54%"></div><div class="spike" style="left:79%"></div>
+            <span class="t">動いた瞬間だけ</span></div></div>
+          <div class="axis"><span>0時</span><span>6時</span><span>12時</span><span>18時</span><span>24時</span></div>
+        </div>
+        <p class="note">実行時間 × リクエスト回数で課金（ミリ秒単位）。月100万リクエストまでは無料枠あり。</p>
+      </div>
+      <div class="vs">
+        <div><b>EC2</b><small>常駐社員<br>自分でサーバーを用意</small></div>
+        <div class="tint"><b style="color:var(--c)">Lambda</b><small>呼ばれた時だけのアルバイト<br>プログラムだけ用意</small></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>よく組み合わせる仲間</h3>
+        <div class="chips">
+          <span class="chip">S3：アップロードで起動</span><span class="chip">API Gateway：API化</span><span class="chip">EventBridge：定期実行</span><span class="chip">DynamoDB：保存先</span><span class="chip">Step Functions：手順を管理</span>
+        </div>
+        <p class="note">Power Automate のクラウドフローに近い感覚です（トリガー → 条件 → 自動実行）。</p>
+      </div>
+      <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>ここ気をつけて</b>
+        <ul><li>1回の実行は最大15分まで。長い処理は分割を</li><li>タイムアウト設定ミスで処理が途中で落ちる</li><li>ライブラリが多いとZIPが大きくなる → レイヤー機能で分離</li></ul></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CloudFront -->
+<section id="cloudfront" class="svc cat-net">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-cf"/></svg></div>
+    <div class="tag">07 ・ 届ける</div>
+    <h2><span class="en">CloudFront</span><span class="ja">世界中にある配送センター</span></h2>
+    <p>AWSのCDN（コンテンツ配信ネットワーク）。世界中の「エッジロケーション」にコピーを置き、利用者の近くから届けます。</p>
+  </header>
+  <div class="panel" style="margin-bottom:18px">
+    <h3>東京のS3にある画像を、ブラジルから見ると？</h3>
+    <div class="route">
+      <div class="tag2">CloudFrontなし <span class="pill slow">遅い</span></div>
+      <div class="pt"><b>ブラジル</b>ユーザー</div>
+      <div class="ln long"><span>海底ケーブルで約1万8千km</span></div>
+      <div class="pt ghost">　</div>
+      <div class="ln long"></div>
+      <div class="pt"><b>東京</b>S3</div>
+    </div>
+    <div class="route">
+      <div class="tag2">CloudFrontあり <span class="pill fast">速い</span></div>
+      <div class="pt"><b>ブラジル</b>ユーザー</div>
+      <div class="ln short"><span>すぐ近く</span></div>
+      <div class="pt edge"><b>サンパウロ</b>エッジ（キャッシュ）</div>
+      <div class="ln faint"><span>初回だけ取りに行く</span></div>
+      <div class="pt"><b>東京</b>S3</div>
+    </div>
+  </div>
+  <div class="grid2 even">
+    <div class="panel">
+      <h3>定番の組み合わせ：S3 ＋ CloudFront</h3>
+      <div class="chips">
+        <span class="chip">静的サイトをS3に置く</span><span class="chip">CloudFront経由で高速配信</span><span class="chip">HTTPS・独自ドメインOK</span><span class="chip">OACでS3への直アクセスを禁止</span>
+      </div>
+      <p class="note">料金は転送量とリクエスト数の従量課金。無料枠（毎月1TBの転送まで）があるので、小〜中規模ならまず無料で試せます。</p>
+    </div>
+    <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>注意点</b>
+      <ul><li>キャッシュが効いて古い内容が出続ける → キャッシュ無効化（Invalidation）</li><li>HTTPSには証明書が必要 → ACMで無料発行</li><li>設定項目は多いが、S3＋デフォルト設定なら最小限で始められる</li></ul></div></div>
+  </div>
+</section>
+
+<!-- Route 53 -->
+<section id="route53" class="svc cat-net">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-r53"/></svg></div>
+    <div class="tag">08 ・ 案内する</div>
+    <h2><span class="en">Route 53</span><span class="ja">名前から住所を教える案内所</span></h2>
+    <p>AWSのDNSサービス。人が読める「ドメイン名」を、コンピューターが分かる「IPアドレス」に変換します。</p>
+  </header>
+  <div class="panel" style="margin-bottom:18px">
+    <div class="dns">
+      <div class="q"><code>example.com</code><small>人が覚える名前</small></div>
+      <div class="arr">→</div>
+      <div class="q mid"><b>Route 53</b><small>翻訳・案内</small></div>
+      <div class="arr">→</div>
+      <div class="q"><code>192.0.2.1</code><small>サーバーの住所（IP）</small></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>「レコード」で行き先を決める</h3>
+      <div class="recs">
+        <div class="rec"><b>A</b><span>ドメイン → IPアドレス</span><code>example.com → 13.114.123.11</code></div>
+        <div class="rec"><b>CNAME</b><span>別名へ転送</span><code>www.example.com → example.com</code></div>
+        <div class="rec"><b>MX</b><span>メールサーバーの指定</span><code>メールの届け先</code></div>
+        <div class="rec"><b>TXT</b><span>認証情報など</span><code>SPF / DKIM / Search Console</code></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>できること</h3>
+        <div class="chips">
+          <span class="chip">ドメイン取得・更新</span><span class="chip">名前解決</span><span class="chip">ヘルスチェック</span><span class="chip">障害時に別サーバーへ切替</span><span class="chip">S3・CloudFront・EC2と連携</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>料金の目安</h3>
+        <p style="margin:0;font-size:14px">ホストゾーン1つ <b>約0.5ドル/月</b> ＋ 問い合わせ数に応じた従量課金。1サイト程度なら月数十円〜数百円。</p>
+      </div>
+    </div>
+  </div>
+  <div class="oneliner"><b>鉄板構成</b>ファイルはS3 → 配信はCloudFront → ドメインはRoute 53。これで「https://自分のドメイン」のサイトが完成。</div>
+</section>
+
+<!-- Lightsail -->
+<section id="lightsail" class="svc cat-compute">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-ls"/></svg></div>
+    <div class="tag">09 ・ 動かす（かんたん版）</div>
+    <h2><span class="en">Lightsail</span><span class="ja">AWSの初心者セット</span></h2>
+    <p>サーバー・ネットワーク・固定IPがパックになった、月額固定のお手軽レンタルサーバー（VPS）。WordPressなら数クリックで立ち上がります。</p>
+  </header>
+  <div class="grid2">
+    <div class="panel">
+      <h3>Lightsail と EC2 をざっくり比較</h3>
+      <table class="cmp">
+        <thead><tr><th></th><th class="c1">Lightsail</th><th>EC2</th></tr></thead>
+        <tbody>
+          <tr><th>難しさ</th>
+            <td><span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></span><small>数クリック</small></td>
+            <td><span class="dots g"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><small>インフラ知識が必要</small></td></tr>
+          <tr><th>自由度</th>
+            <td><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><small>決まった構成から選ぶ</small></td>
+            <td><span class="dots g"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><small>ほぼ自由自在</small></td></tr>
+          <tr><th>料金</th><td><b>月額固定</b><small>$3.5〜／予算管理しやすい</small></td><td><b>従量課金</b><small>使った分だけ</small></td></tr>
+          <tr><th>付いてくるもの</th><td colspan="2">テンプレ（WordPress・LAMP・Node.js・Django など）、固定IP、DNS設定、スナップショット、オプションでストレージ・DB</td></tr>
+        </tbody>
+      </table>
+      <p class="note">たとえるなら、Lightsailは「設備がそろった部屋」、EC2は「設備を自分で選ぶ部屋」。</p>
+    </div>
+    <div class="panel">
+      <h3>向いている人</h3>
+      <ul class="fit">
+        <li><span class="m">◎</span><span>とりあえずWordPressを動かしたい</span></li>
+        <li><span class="m">◎</span><span>個人の開発・検証環境がほしい</span></li>
+        <li><span class="m">◎</span><span>インフラ初心者だけど触ってみたい</span></li>
+        <li><span class="m tri">△</span><span>本番の大規模サービス<br><small>→ EC2 や Fargate がおすすめ</small></span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- VPC -->
+<section id="vpc" class="svc cat-net">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-vpc"/></svg></div>
+    <div class="tag">10 ・ つなぐ（土台）</div>
+    <h2><span class="en">VPC</span><span class="ja">自分専用の土地</span></h2>
+    <p>Virtual Private Cloud。AWSの中に作る自分だけのネットワーク空間です。EC2やRDSはこの中に置きます。</p>
+  </header>
+  <div class="grid2">
+    <div class="panel">
+      <h3>家にたとえると</h3>
+      <svg viewBox="0 0 560 330" role="img" aria-label="VPCを土地、サブネットを部屋、インターネットゲートウェイを玄関、セキュリティグループを鍵にたとえた図">
+        <g class="cat-net">
+          <rect x="190" y="6" width="180" height="36" rx="18" style="fill:var(--soft)"/>
+          <text class="ink" x="280" y="29" text-anchor="middle" style="font-size:13px;font-weight:700">インターネット</text>
+          <rect class="box c" x="16" y="78" width="528" height="240" rx="14"/>
+          <text class="lbl c" x="32" y="102">VPC ＝ 土地</text>
+          <rect x="110" y="66" width="96" height="24" rx="6" style="fill:var(--c)"/>
+          <text x="158" y="83" text-anchor="middle" style="fill:var(--surface);font-size:11.5px;font-weight:700">IGW（玄関）</text>
+          <rect class="box" x="34" y="118" width="232" height="182" rx="10" style="fill:color-mix(in srgb,var(--c-storage) 8%,transparent);stroke:var(--c-storage)"/>
+          <text x="48" y="140" style="fill:var(--c-storage);font-size:12px;font-weight:700">パブリックサブネット</text>
+          <text class="small" x="48" y="156">外から入れる部屋</text>
+          <rect class="box" x="290" y="118" width="236" height="182" rx="10" style="fill:color-mix(in srgb,var(--c-db) 8%,transparent);stroke:var(--c-db)"/>
+          <text x="304" y="140" style="fill:var(--c-db);font-size:12px;font-weight:700">プライベートサブネット</text>
+          <text class="small" x="304" y="156">内側からしか入れない部屋</text>
+        </g>
+        <g class="node cat-compute"><rect x="96" y="196" width="110" height="56" rx="10"/><text class="nt" x="151" y="220">EC2</text><text class="ns" x="151" y="239">家具</text></g>
+        <g class="node cat-db"><rect x="356" y="196" width="110" height="56" rx="10"/><text class="nt" x="411" y="220">RDS</text><text class="ns" x="411" y="239">冷蔵庫</text></g>
+        <g class="cat-sec">
+          <rect x="176" y="186" width="44" height="20" rx="10" style="fill:var(--c)"/><text x="198" y="200" text-anchor="middle" style="fill:var(--surface);font-size:10.5px;font-weight:700">SG鍵</text>
+          <rect x="436" y="186" width="44" height="20" rx="10" style="fill:var(--c)"/><text x="458" y="200" text-anchor="middle" style="fill:var(--surface);font-size:10.5px;font-weight:700">SG鍵</text>
+        </g>
+        <path class="wire" d="M240 42C200 50 160 52 158 64" marker-end="url(#ah)"/>
+        <path class="wire" d="M158 90V192" marker-end="url(#ah)"/>
+        <path class="wire" d="M206 224H352" marker-end="url(#ah)"/>
+        <text class="small" x="279" y="216" text-anchor="middle">EC2からだけ</text>
+        <path class="wire ng dash" d="M330 42C380 60 410 110 410 180"/>
+        <text class="ngt" x="404" y="80" style="font-size:16px">✕</text>
+        <text class="small" x="424" y="78" style="fill:var(--ng)">直接は入れない</text>
+      </svg>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>どんな時に意識する？</h3>
+        <div class="uses" style="grid-template-columns:minmax(0,1fr)">
+          <div class="use"><i>EC2</i>起動時に、どのVPCに置くかを選ぶ</div>
+          <div class="use"><i>RDS</i>非公開にしたいならプライベートサブネットへ</div>
+          <div class="use"><i>Lambda</i>DBに接続するなら同じVPCにいる必要あり</div>
+        </div>
+      </div>
+      <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>よくあるハマりどころ</b>
+        <ul><li>全部非公開にして外と通信できない</li><li>セキュリティ設定が厳しすぎて何もつながらない</li><li>最初はAWSが用意している「デフォルトVPC」で感覚をつかむのもアリ</li></ul></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ELB -->
+<section id="elb" class="svc cat-net">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-elb"/></svg></div>
+    <div class="tag">11 ・ 振り分ける</div>
+    <h2><span class="en">ELB</span><span class="ja">アクセスの交通整理員</span></h2>
+    <p>Elastic Load Balancing。押し寄せたアクセスを複数のEC2に振り分け、1台にアクセスが集中してパンクするのを防ぎます。</p>
+  </header>
+  <div class="grid2">
+    <div class="panel">
+      <h3>焼肉屋の入口スタッフのように案内する</h3>
+      <svg viewBox="0 0 560 250" role="img" aria-label="ELBが3台のEC2にアクセスを振り分け、故障した1台を自動で外す図">
+        <g>
+          <circle class="person" cx="40" cy="88" r="8"/><path class="person" d="M26 114c0-9 6-14 14-14s14 5 14 14z"/>
+          <circle class="person" cx="40" cy="140" r="8"/><path class="person" d="M26 166c0-9 6-14 14-14s14 5 14 14z"/>
+          <text class="small" x="40" y="192" text-anchor="middle">お客さん</text>
+          <text class="small" x="40" y="206" text-anchor="middle">（アクセス）</text>
+        </g>
+        <path class="wire" d="M66 126H166" marker-end="url(#ah)"/>
+        <text class="small" x="116" y="118" text-anchor="middle">example.com</text>
+        <g class="node cat-net"><rect x="168" y="96" width="120" height="60" rx="10"/><text class="nt" x="228" y="122">ELB</text><text class="ns" x="228" y="142">入口スタッフ</text></g>
+        <path class="wire" d="M288 116C330 116 340 46 386 46" marker-end="url(#ah)"/>
+        <path class="wire" d="M288 126H386" marker-end="url(#ah)"/>
+        <path class="wire ng dash" d="M288 136C330 136 340 206 386 206"/>
+        <g class="node cat-compute"><rect x="388" y="20" width="128" height="52" rx="10"/><text class="nt" x="452" y="44">EC2 ①</text><text class="ns" x="452" y="62" style="fill:var(--ok)">正常</text></g>
+        <g class="node cat-compute"><rect x="388" y="100" width="128" height="52" rx="10"/><text class="nt" x="452" y="124">EC2 ②</text><text class="ns" x="452" y="142" style="fill:var(--ok)">正常</text></g>
+        <g class="node cat-compute" opacity=".45"><rect x="388" y="180" width="128" height="52" rx="10" style="stroke-dasharray:5 4"/><text class="nt" x="452" y="204">EC2 ③</text><text class="ns" x="452" y="222" style="fill:var(--ng)">ダウン</text></g>
+        <text class="ngt" x="336" y="186" style="font-size:18px">✕</text>
+        <text class="small" x="300" y="246">ヘルスチェックで故障を検知 → 自動で外し、復活したら戻す</text>
+      </svg>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>3つの種類</h3>
+        <div class="fit" style="list-style:none">
+          <div class="tile"><span class="k">ALB ・ まずはこれ</span><b>Application Load Balancer</b><span>Webアプリ向け。URLのパスで振り分け（/api はA、/image はB）</span></div>
+          <div class="tile"><span class="k">NLB</span><b>Network Load Balancer</b><span>超高速。ミリ秒が命のTCP通信向け</span></div>
+          <div class="tile" style="opacity:.7"><span class="k">CLB ・ 非推奨</span><b>Classic Load Balancer</b><span>昔からあるタイプ。古い構成で見かける</span></div>
+        </div>
+      </div>
+      <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>気をつけるポイント</b>
+        <ul><li>HTTPS化はELBで（証明書はACMから）</li><li>セキュリティグループの設定漏れで全ブロック</li><li>DNS名が <code>*.elb.amazonaws.com</code> になるので独自ドメインはRoute 53と連携</li></ul></div></div>
+    </div>
+  </div>
+  <div class="oneliner"><b>鉄板パターン</b>サーバーを増やす ＝ ELBを入れる。Auto ScalingでEC2を2台→3台に増やしても、URLはそのまま。</div>
+</section>
+
+<!-- Region / AZ -->
+<section id="region" class="svc cat-geo">
+  <header class="svc-head">
+    <div class="badge"><svg class="ico"><use href="#i-region"/></svg></div>
+    <div class="tag">12 ・ 土台</div>
+    <h2><span class="en">リージョン / AZ</span><span class="ja">営業所エリアと独立した建物</span></h2>
+    <p>リージョンは世界各地にある「データセンターのあるエリア」。AZ（アベイラビリティーゾーン）は、その中にある独立した建物群です。</p>
+  </header>
+  <div class="grid2">
+    <div class="panel">
+      <h3>1つのAZが止まっても、別のAZで動き続ける</h3>
+      <svg viewBox="0 0 600 300" role="img" aria-label="東京リージョン内の3つのAZのうち1つが障害で止まっても、別のAZのEC2とRDSが動き続ける図">
+        <rect class="box dash" x="8" y="8" width="584" height="262" rx="14"/>
+        <text class="lbl" x="24" y="32">東京リージョン（ap-northeast-1）</text>
+        <!-- AZ a down -->
+        <rect x="24" y="48" width="176" height="206" rx="10" stroke-width="1.5" stroke-dasharray="5 4" style="fill:color-mix(in srgb,var(--ng) 8%,transparent);stroke:var(--ng)"/>
+        <text class="small" x="38" y="70" style="font-weight:700">AZ-a</text>
+        <text class="ngt" x="186" y="72" text-anchor="end" style="font-size:12px">停電！</text>
+        <g opacity=".4">
+          <g class="node cat-compute"><rect x="48" y="92" width="128" height="52" rx="10"/><text class="nt" x="112" y="116">EC2</text><text class="ns" x="112" y="134">Webサーバー①</text></g>
+          <g class="node cat-db"><rect x="48" y="164" width="128" height="52" rx="10"/><text class="nt" x="112" y="188">RDS</text><text class="ns" x="112" y="206">メイン</text></g>
+        </g>
+        <text class="ngt" x="112" y="240" text-anchor="middle" style="font-size:12px">停止</text>
+        <!-- AZ c ok -->
+        <rect x="212" y="48" width="176" height="206" rx="10" stroke-width="1.5" style="fill:color-mix(in srgb,var(--ok) 8%,transparent);stroke:var(--ok)"/>
+        <text class="small" x="226" y="70" style="font-weight:700">AZ-c</text>
+        <g class="node cat-compute"><rect x="236" y="92" width="128" height="52" rx="10"/><text class="nt" x="300" y="116">EC2</text><text class="ns" x="300" y="134">Webサーバー②</text></g>
+        <g class="node cat-db"><rect x="236" y="164" width="128" height="52" rx="10"/><text class="nt" x="300" y="188">RDS</text><text class="ns" x="300" y="206">予備 → メインに昇格</text></g>
+        <text class="okt" x="300" y="240" text-anchor="middle" style="font-size:12px">✓ 動き続ける</text>
+        <!-- AZ d -->
+        <rect class="box dash" x="400" y="48" width="176" height="206" rx="10"/>
+        <text class="small" x="414" y="70" style="font-weight:700">AZ-d</text>
+        <text class="small" x="488" y="156" text-anchor="middle">さらに分散も可能</text>
+        <path class="wire dash" d="M176 190H232" marker-end="url(#ah)"/>
+        <text class="small" x="300" y="290" text-anchor="middle">AZを分けるだけでなく、切り替えまで含めた構成にしておくのがポイント</text>
+      </svg>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h3>リージョンの例</h3>
+        <ul class="regions">
+          <li><span>東京</span><code>ap-northeast-1</code></li>
+          <li><span>大阪</span><code>ap-northeast-3</code><small>東京とは別リージョン。東京のAZの1つではありません</small></li>
+          <li><span>オレゴン（米国西部）</span><code>us-west-2</code></li>
+          <li><span>フランクフルト</span><code>eu-central-1</code></li>
+          <li class="note"><span>バージニア北部（米国東部）</span><code>us-east-1</code><small>新サービスはここから先に使えることが多く、東京ではまだ使えない場合もあります</small></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>リージョンを選ぶ理由は2つ</h3>
+        <div class="elements">
+          <div class="tile"><span class="k">障害対策</span><b>複数AZに分散</b><span>本番はマルチAZが鉄則</span></div>
+          <div class="tile"><span class="k">法律・距離</span><b>置き場所を選ぶ</b><span>国内保管が必要なら東京、北米向けなら米国</span></div>
+        </div>
+        <p class="note">S3など一部のサービスはAWSが自動でAZに分散するので、AZを意識しなくてOK。EC2やRDSはAZ選びが重要です。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- Kiro -->
+<section id="kiro" class="kiro-sec wrap cat-ai">
+  <div class="kiro-hero">
+    <span class="new">BONUS ・ AI開発ツール</span>
+    <h2><span class="en">Kiro</span><span class="ja">仕様書から作るAI開発パートナー</span></h2>
+    <p>AWSが提供するAIエージェント型の開発環境（IDE・CLI・Web）。いきなりコードを書くのではなく、まず「要件 → 設計 → タスク」を文書にしてから実装する<b>スペック駆動開発</b>が特徴です。</p>
+    <div class="modes">
+      <div class="mode"><span class="k">VIBE MODE</span><b>チャットでさっと作る</b><p>思いついたことを話しかけて、すぐ試作。小さな修正や実験向け。</p></div>
+      <div class="mode"><span class="k">SPEC MODE</span><b>仕様書を作ってから作る</b><p>要件・設計・タスクを先に固める。本格的な機能や複数人での開発向け。</p></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h3>スペック駆動開発の流れ（例：静的サイトを作りたい）</h3>
+    <div class="spec">
+      <div class="sstep"><span class="no">1</span><code>prompt</code><b>やりたいことを伝える</b><small>「S3とCloudFrontで会社のサイトを公開したい」</small></div>
+      <div class="sstep"><span class="no">2</span><code>requirements.md</code><b>要件</b><small>ユーザーストーリーと「何ができたら完成か」の受け入れ条件</small></div>
+      <div class="sstep"><span class="no">3</span><code>design.md</code><b>設計</b><small>構成図、データの流れ、使うAWSサービス</small></div>
+      <div class="sstep"><span class="no">4</span><code>tasks.md</code><b>タスク</b><small>順番付きの作業リスト。1つずつ実行できる</small></div>
+      <div class="sstep out"><span class="no">5</span><code>code + test</code><b>実装・テスト</b><small>エージェントがタスクを進め、テストで確認</small></div>
+    </div>
+  </div>
+
+  <div class="sect-title" style="margin-top:36px"><h2 style="font-size:clamp(20px,3vw,26px)">主な機能</h2></div>
+  <div class="feat">
+    <div class="f"><span class="k">SPECS</span><b>仕様書づくり</b><p>プロンプトから要件・設計・タスクを自動で書き起こす。人がレビューしてから実装へ進める。</p></div>
+    <div class="f"><span class="k">HOOKS</span><b>自動お手伝い</b><p>ファイル保存などをきっかけに、裏でエージェントが作業する。</p><div class="ex">例：保存したらテストを追加、ドキュメントを更新</div></div>
+    <div class="f"><span class="k">STEERING</span><b>ルールを覚えさせる</b><p>使う技術、命名規則、チームの決まりごとをファイルに書いておくと、毎回それに従う。</p></div>
+    <div class="f"><span class="k">MCP / POWERS</span><b>外部ツールとつなぐ</b><p>MCPでドキュメントやAPI、Terraform・Figmaなどと連携し、より正確に作業できる。</p></div>
+    <div class="f"><span class="k">AGENTS</span><b>任せて並行作業</b><p>自律モードやサブエージェントで、大きな作業を分担して進める。</p></div>
+    <div class="f"><span class="k">CLI</span><b>ターミナルでも</b><p>CLIのヘッドレスモードでCI/CDパイプラインにも組み込める。</p></div>
+  </div>
+
+  <div class="grid2" style="margin-top:18px">
+    <div class="panel">
+      <h3>この資料の知識が、AIの設計を読む力になる</h3>
+<pre class="doc"><span class="h"># design.md（Kiroが出力した設計のイメージ）</span>
+
+## 構成
+- 静的ファイルは <span class="hl">S3</span> バケットに配置
+- <span class="hl">CloudFront</span> で配信、<span class="hl">OAC</span> でS3を非公開に
+- 独自ドメインは <span class="hl">Route 53</span>、証明書は <span class="hl">ACM</span>
+- デプロイ用に最小権限の <span class="hl">IAM ロール</span> を作成
+- エラー率を <span class="hl">CloudWatch</span> アラームで監視</pre>
+      <p class="note">黄色の単語がすべて分かれば、AIの提案が妥当かを自分で判断できます。</p>
+    </div>
+    <div class="stack">
+      <div class="warn"><svg class="ico"><use href="#i-warn"/></svg><div><b>AIに任せるときのチェックポイント</b>
+        <ul><li>IAMポリシーが <code>*</code>（全権限）になっていないか</li><li>RDSやS3が意図せず公開されていないか</li><li>作ったEC2・RDSを起動しっぱなしにしていないか</li></ul></div></div>
+      <div class="panel">
+        <h3>使える主なAIモデル</h3>
+        <div class="chips">
+          <span class="chip star">Auto（タスクに合わせて自動選択）</span><span class="chip">Claude</span><span class="chip">GPT</span><span class="chip">オープンウェイト系</span>
+        </div>
+        <p class="note">Google・GitHub・AWS Builder ID などでサインインして使えます。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h3>料金プラン（1ユーザーあたり・月額）</h3>
+    <div class="matrix-wrap">
+    <table class="price">
+      <thead><tr><th>プラン</th><th>月額</th><th>クレジット</th><th class="barc">量のイメージ</th></tr></thead>
+      <tbody>
+        <tr><td class="plan">Free</td><td>$0</td><td>50</td><td class="barc"><div class="cbar" style="width:1%"></div></td></tr>
+        <tr><td class="plan">Pro</td><td>$20</td><td>1,000</td><td class="barc"><div class="cbar" style="width:10%"></div></td></tr>
+        <tr><td class="plan">Pro+</td><td>$40</td><td>2,000</td><td class="barc"><div class="cbar" style="width:20%"></div></td></tr>
+        <tr><td class="plan">Pro Max</td><td>$100</td><td>5,000</td><td class="barc"><div class="cbar" style="width:50%"></div></td></tr>
+        <tr><td class="plan">Power</td><td>$200</td><td>10,000</td><td class="barc"><div class="cbar" style="width:100%"></div></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="note">クレジットはチャット・スペック実行・エージェント作業で消費。有料プランは追加1クレジット$0.04、余った分は翌月に繰り越されません。料金・機能は2026年10月時点の公式サイト（kiro.dev）の情報です。</p>
+  </div>
+</section>
+
+<!-- Summary -->
+<section id="summary" class="summary wrap" style="scroll-margin-top:60px">
+  <div class="sect-title"><h2>早見表</h2><p>迷ったらここに戻る</p></div>
+  <div class="sum-wrap">
+  <table class="sum">
+    <thead><tr><th>サービス</th><th>役割</th><th>たとえ</th></tr></thead>
+    <tbody>
+      <tr class="cat-compute"><td><a href="#ec2">EC2</a></td><td>アプリやプログラムを動かす</td><td>借りられるパソコン／オフィス</td></tr>
+      <tr class="cat-storage"><td><a href="#s3">S3</a></td><td>ファイルを保存する</td><td>なんでも置ける倉庫</td></tr>
+      <tr class="cat-db"><td><a href="#rds">RDS</a></td><td>データを整理して保存・検索</td><td>おまかせDB屋さん／書類保管庫</td></tr>
+      <tr class="cat-sec"><td><a href="#iam">IAM</a></td><td>誰が何をできるかを管理</td><td>入退室管理・通行証</td></tr>
+      <tr class="cat-ops"><td><a href="#cloudwatch">CloudWatch</a></td><td>状態を監視し、異常を通知</td><td>監視カメラ＆健康診断</td></tr>
+      <tr class="cat-compute"><td><a href="#lambda">Lambda</a></td><td>イベントで自動処理を実行</td><td>呼ばれた時だけのアルバイト</td></tr>
+      <tr class="cat-net"><td><a href="#cloudfront">CloudFront</a></td><td>コンテンツを高速配信</td><td>配送センター</td></tr>
+      <tr class="cat-net"><td><a href="#route53">Route 53</a></td><td>ドメイン名をサーバーへ案内</td><td>住所案内所</td></tr>
+      <tr class="cat-compute"><td><a href="#lightsail">Lightsail</a></td><td>手軽に月額固定でサーバー</td><td>設備がそろった部屋</td></tr>
+      <tr class="cat-net"><td><a href="#vpc">VPC</a></td><td>自分専用のネットワーク</td><td>土地（部屋＝サブネット）</td></tr>
+      <tr class="cat-net"><td><a href="#elb">ELB</a></td><td>アクセスを複数サーバーに振り分け</td><td>交通整理員</td></tr>
+      <tr class="cat-geo"><td><a href="#region">リージョン/AZ</a></td><td>設備のある地域と建物</td><td>営業所エリアと建物</td></tr>
+      <tr class="cat-ai"><td><a href="#kiro">Kiro</a></td><td>仕様書からAIで開発</td><td>設計から手伝う開発パートナー</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  元資料「AWSこれだけは知っておけ」をもとに図解化。Kiroの情報は <a href="https://kiro.dev/" target="_blank" rel="noopener">kiro.dev</a> ／ <a href="https://kiro.dev/pricing/" target="_blank" rel="noopener">kiro.dev/pricing</a>（2026年10月時点）。
+</footer>
+
+</body></html>
